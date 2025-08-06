@@ -15,4 +15,8 @@ abstract class DomainModule {
     @Singleton
     @Binds
     abstract fun provideAuthRepo(authRepositryImpl: AuthRepositryImpl): AuthRepositry
+
+
+
+
 }

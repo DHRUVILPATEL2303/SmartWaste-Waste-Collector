@@ -31,6 +31,7 @@ import androidx.navigation.NavController
 import com.example.smartwaste_waste_collector.R
 import com.example.smartwaste_waste_collector.presentation.navigation.Routes
 import com.example.smartwaste_waste_collector.presentation.viewmodels.authviewmodel.AuthViewModel
+import com.example.smartwaste_waste_collector.presentation.viewmodels.onBoardingViewModel.OnBoardingViewModel
 import com.google.accompanist.pager.*
 import kotlinx.coroutines.launch
 
@@ -45,6 +46,7 @@ data class OnBoardingPage(
 @Composable
 fun OnBoardingScreenUI(
     viewModel: AuthViewModel = hiltViewModel(),
+    onBoardingViewModel: OnBoardingViewModel=hiltViewModel<OnBoardingViewModel>(),
     navController: NavController
 ) {
     val pagerState = rememberPagerState()
@@ -87,6 +89,7 @@ fun OnBoardingScreenUI(
             BottomBarContent(pagerState, pages.size) {
                 if (pagerState.currentPage == pages.lastIndex) {
 //                    viewModel.setOnboardingShown() // Assuming AuthViewModel has this method
+                    onBoardingViewModel.setOnboardingShown()
                     navController.navigate(Routes.LoginScreen) {
                         popUpTo(navController.graph.startDestinationId) { inclusive = true }
                     }
