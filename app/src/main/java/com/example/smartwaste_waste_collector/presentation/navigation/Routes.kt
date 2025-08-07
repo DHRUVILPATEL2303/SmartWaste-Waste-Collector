@@ -15,6 +15,20 @@ sealed class Routes {
 
     @Serializable
     object OnBoardingScreen
+
+
+    @Serializable
+    object ReportScreen
+
+    @Serializable
+    object PointsScreen
+
+    @Serializable
+    object FeedBackScreen
+
+    @Serializable
+    object ProfileScreen
+
 }
 
 sealed class SubNavigation {
