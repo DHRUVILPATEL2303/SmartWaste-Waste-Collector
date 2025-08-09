@@ -1,18 +1,20 @@
 package com.example.smartwaste_waste_collector.presentation.screens.home
 
+import android.util.Log
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
-import com.example.smartwaste_waste_collector.data.models.DailyAssignment
+import com.example.smartwaste_waste_collector.data.models.RouteModel
 import com.example.smartwaste_waste_collector.data.models.TruckModel
-import com.example.smartwaste_waste_collector.presentation.viewmodels.dailyassignviewmodel.DailyAssignViewModel
+import com.example.smartwaste_waste_collector.presentation.viewmodels.routeprogressviewmodel.CommonRouteProgressState
+import com.example.smartwaste_waste_collector.presentation.viewmodels.routeprogressviewmodel.RouteProgressViewModel
+import com.example.smartwaste_waste_collector.presentation.viewmodels.rrouteviewmodel.CommonRouteState
+import com.example.smartwaste_waste_collector.presentation.viewmodels.rrouteviewmodel.RouteViewModel
 import com.example.smartwaste_waste_collector.presentation.viewmodels.truckviewmodel.CommonTruckState
 import com.example.smartwaste_waste_collector.presentation.viewmodels.truckviewmodel.TruckViewModel
 import com.google.firebase.auth.FirebaseAuth
@@ -21,29 +23,41 @@ import com.google.firebase.auth.FirebaseAuth
 @Composable
 fun HomeScreenUI(
     modifier: Modifier = Modifier,
-    dailyAssignViewModel: DailyAssignViewModel = hiltViewModel(),
+    routeProgressViewModel: RouteProgressViewModel = hiltViewModel(),
     truckViewModel: TruckViewModel = hiltViewModel(),
+    routeViewModel: RouteViewModel = hiltViewModel(),
     navController: NavHostController
 ) {
-    val dailyAssignState by dailyAssignViewModel.dailyAssignState.collectAsState()
-    val submitState by dailyAssignViewModel.submitAssignState.collectAsState()
+    val routeProgressState by routeProgressViewModel.routeProgressState.collectAsState()
+    val createState by routeProgressViewModel.createAndSubmitRouteProgressState.collectAsState()
     val truckState by truckViewModel.allTruckState.collectAsState()
+    val routeState by routeViewModel.allroutestate.collectAsState()
 
-    var showDialog by remember { mutableStateOf(false) }
+    val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
 
-    LaunchedEffect(Unit) {
-        dailyAssignViewModel.getDailyAssignment()
+
+    var showDialog by remember {
+        mutableStateOf(false)
     }
 
-    LaunchedEffect(showDialog) {
-        if (showDialog) {
-            truckViewModel.getAllTrucks()
+
+    LaunchedEffect(routeProgressState) {
+        if (!routeProgressState.isLoading) {
+            val progress = routeProgressState.success
+            val hasAssignment = progress != null &&
+                    (progress.assignedDriverId == currentUserId || progress.assignedCollectorId == currentUserId)
+            showDialog = !hasAssignment
+
+            if (showDialog) {
+                truckViewModel.getAllTrucks()
+                routeViewModel.getAllRoutes()
+            }
         }
     }
 
-    LaunchedEffect(dailyAssignState) {
-        if (!dailyAssignState.isLoading && dailyAssignState.success == null && dailyAssignState.error.isEmpty()) {
-            showDialog = true
+    LaunchedEffect(createState) {
+        if (!createState.isLoading && createState.success != null) {
+            routeProgressViewModel.getRouteProgress()
         }
     }
 
@@ -60,37 +74,48 @@ fun HomeScreenUI(
             contentAlignment = Alignment.Center
         ) {
             when {
-                dailyAssignState.isLoading -> {
+                routeProgressState.isLoading -> {
                     CircularProgressIndicator()
                 }
 
-                dailyAssignState.success != null -> {
-                    val assignment = dailyAssignState.success!!
+                routeProgressState.success != null -> {
+                    val progress = routeProgressState.success!!
+                    val role = when (currentUserId) {
+                        progress.assignedDriverId -> "driver"
+                        progress.assignedCollectorId -> "collector"
+                        else -> "unknown"
+                    }
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
-                        Text("Today's Assignment", style = MaterialTheme.typography.titleLarge)
+                        Text("Today's Route Progress", style = MaterialTheme.typography.titleLarge)
                         Spacer(modifier = Modifier.height(16.dp))
-                        Text("Date: ${assignment.date}")
-                        Text("Truck ID: ${assignment.truckId}")
-                        Text("Route ID: ${assignment.routeId}")
-                        Text("Role: ${assignment.role}")
+                        Text("Date: ${progress.date}")
+                        Text("Truck ID: ${progress.assignedTruckId}")
+                        Text("Route ID: ${progress.routeId}")
+                        Text("Role: $role")
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text("Area Progress:", style = MaterialTheme.typography.titleMedium)
+                        progress.areaProgress.forEach { area ->
+                            Text("${area.areaName}: ${if (area.isCompleted) "Completed" else "Pending"}")
+                        }
                     }
                 }
 
-                dailyAssignState.error.isNotEmpty() -> {
-                    Text("Error: ${dailyAssignState.error}", color = MaterialTheme.colorScheme.error)
+                routeProgressState.error.isNotEmpty() -> {
+                    Text("Error: ${routeProgressState.error}", color = MaterialTheme.colorScheme.error)
                 }
             }
         }
     }
 
     if (showDialog) {
-        AssignmentDialog(
+        RouteProgressDialog(
             truckState = truckState,
-            onSubmit = { assignment ->
-                dailyAssignViewModel.submitDailyAssignment(assignment)
+            routeState = routeState,
+            onSubmit = { truck, route, role ->
+                routeProgressViewModel.createAndSubmitRouteProgress(truck, route, role)
                 showDialog = false
             },
             onDismiss = {
@@ -102,15 +127,17 @@ fun HomeScreenUI(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AssignmentDialog(
+fun RouteProgressDialog(
     truckState: CommonTruckState<List<TruckModel>>,
-    onSubmit: (DailyAssignment) -> Unit,
+    routeState: CommonRouteState<List<RouteModel>>,
+    onSubmit: (TruckModel, RouteModel, String) -> Unit,
     onDismiss: () -> Unit
 ) {
     var selectedTruck by remember { mutableStateOf<TruckModel?>(null) }
     var expandedTruck by remember { mutableStateOf(false) }
 
-    var routeId by remember { mutableStateOf("") }
+    var selectedRoute by remember { mutableStateOf<RouteModel?>(null) }
+    var expandedRoute by remember { mutableStateOf(false) }
 
     var selectedRole by remember { mutableStateOf("") }
     var expandedRole by remember { mutableStateOf(false) }
@@ -119,12 +146,11 @@ fun AssignmentDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("No Assignment Found") },
+        title = { Text("No Route Progress Found") },
         text = {
             Column {
-                Text("Fill in assignment details:")
+                Text("Fill in route progress details:")
                 Spacer(modifier = Modifier.height(12.dp))
-
 
                 if (truckState.isLoading) {
                     CircularProgressIndicator()
@@ -163,16 +189,40 @@ fun AssignmentDialog(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                OutlinedTextField(
-                    value = routeId,
-                    onValueChange = { routeId = it },
-                    label = { Text("Route ID") },
-                    keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Text),
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
+                if (routeState.isLoading) {
+                    CircularProgressIndicator()
+                } else if (routeState.success != null) {
+                    ExposedDropdownMenuBox(
+                        expanded = expandedRoute,
+                        onExpandedChange = { expandedRoute = !expandedRoute }
+                    ) {
+                        OutlinedTextField(
+                            value = selectedRoute?.name ?: "",
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text("Route") },
+                            modifier = Modifier.menuAnchor().fillMaxWidth(),
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedRoute) },
+                            colors = ExposedDropdownMenuDefaults.textFieldColors()
+                        )
+                        ExposedDropdownMenu(
+                            expanded = expandedRoute,
+                            onDismissRequest = { expandedRoute = false }
+                        ) {
+                            routeState.success.forEach { route ->
+                                DropdownMenuItem(
+                                    text = { Text(route.name) },
+                                    onClick = {
+                                        selectedRoute = route
+                                        expandedRoute = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                } else if (routeState.error.isNotEmpty()) {
+                    Text("Error loading routes: ${routeState.error}", color = MaterialTheme.colorScheme.error)
+                }
 
                 Spacer(modifier = Modifier.height(12.dp))
 
@@ -188,7 +238,7 @@ fun AssignmentDialog(
                         modifier = Modifier
                             .menuAnchor()
                             .fillMaxWidth(),
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedRole) },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedRoute) },
                         colors = ExposedDropdownMenuDefaults.textFieldColors()
                     )
                     ExposedDropdownMenu(
@@ -211,17 +261,8 @@ fun AssignmentDialog(
         confirmButton = {
             Button(
                 onClick = {
-                    if (selectedTruck != null && routeId.isNotBlank() && selectedRole.isNotBlank()) {
-                        val today = java.time.LocalDate.now().toString()
-                        val assignment = DailyAssignment(
-                            date = today,
-                            truckId = selectedTruck!!.id,
-                            routeId = routeId,
-                            role = selectedRole,
-                            collectorId = if (selectedRole == "collector") FirebaseAuth.getInstance().currentUser!!.uid else "",
-                            driverId = if (selectedRole == "driver") FirebaseAuth.getInstance().currentUser!!.uid else ""
-                        )
-                        onSubmit(assignment)
+                    if (selectedTruck != null && selectedRoute != null && selectedRole.isNotBlank()) {
+                        onSubmit(selectedTruck!!, selectedRoute!!, selectedRole)
                     }
                 }
             ) {

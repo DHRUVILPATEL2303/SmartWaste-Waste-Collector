@@ -2,6 +2,7 @@ package com.example.smartwaste_waste_collector.presentation.navigation
 
 import kotlinx.serialization.Serializable
 
+
 sealed class Routes {
 
     @Serializable
@@ -30,6 +31,7 @@ sealed class Routes {
     object ProfileScreen
 
 }
+
 
 sealed class SubNavigation {
 

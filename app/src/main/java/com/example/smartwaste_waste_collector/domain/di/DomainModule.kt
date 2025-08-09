@@ -3,9 +3,13 @@ package com.example.smartwaste_waste_collector.domain.di
 import com.example.smartwaste_waste_collector.data.models.DailyAssignment
 import com.example.smartwaste_waste_collector.data.repoimpl.authrepoimpl.AuthRepositryImpl
 import com.example.smartwaste_waste_collector.data.repoimpl.dailyassignrepoimpl.DailyAssignRepositryImpl
+import com.example.smartwaste_waste_collector.data.repoimpl.routeprogressrepoimpl.RouteProgressRepositoryImpl
+import com.example.smartwaste_waste_collector.data.repoimpl.routerepositryimpl.RouteRepositryImpl
 import com.example.smartwaste_waste_collector.data.repoimpl.truckrepoimpl.TruckRepositryImpl
+import com.example.smartwaste_waste_collector.domain.repo.RouteProgressRepo
 import com.example.smartwaste_waste_collector.domain.repo.authrepo.AuthRepositry
 import com.example.smartwaste_waste_collector.domain.repo.dailyAssignRepo.DailyAssignRepository
+import com.example.smartwaste_waste_collector.domain.repo.trucksrepo.RouteRepositry
 import com.example.smartwaste_waste_collector.domain.repo.trucksrepo.TrucksRepositry
 import dagger.Binds
 import dagger.Module
@@ -30,5 +34,15 @@ abstract class DomainModule {
     @Singleton
     @Binds
     abstract fun provideTruckRepo(truckRepositryImpl: TruckRepositryImpl): TrucksRepositry
+
+
+    @Singleton
+    @Binds
+    abstract fun provideRouteAssignRepo(RepositryImpl: RouteProgressRepositoryImpl): RouteProgressRepo
+
+    @Singleton
+    @Binds
+    abstract fun provideRoutesRepo(RepositryImpl: RouteRepositryImpl): RouteRepositry
+
 
 }

@@ -21,6 +21,9 @@ class TruckViewModel @Inject constructor(
     val allTruckState=_allTrucksState.asStateFlow()
 
 
+    init {
+        getAllTrucks()
+    }
     fun getAllTrucks(){
         viewModelScope.launch(Dispatchers.IO) {
 

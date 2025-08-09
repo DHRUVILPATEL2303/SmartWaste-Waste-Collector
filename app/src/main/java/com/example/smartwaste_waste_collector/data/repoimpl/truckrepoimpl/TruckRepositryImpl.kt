@@ -16,30 +16,24 @@ class TruckRepositryImpl @Inject constructor(
     override suspend fun getallTrucks(): Flow<ResultState<List<TruckModel>>> = callbackFlow {
         trySend(ResultState.Loading)
 
-        try {
-            firebaseFirestore.collection(TRUCKS_PATH).addSnapshotListener { value, error ->
-
+        val listenerRegistration = firebaseFirestore.collection(TRUCKS_PATH)
+            .addSnapshotListener { value, error ->
                 if (error != null) {
                     trySend(ResultState.Error(error.message ?: "Unknown error occurred"))
                 } else {
-                    val trucks = value?.mapNotNull{
-                        it.toObject<TruckModel>(TruckModel::class.java).copy(
+                    val trucks = value?.mapNotNull {
+                        it.toObject(TruckModel::class.java).copy(
                             id = it.id
                         )
                     } ?: emptyList()
                     trySend(ResultState.Success(trucks))
-
                 }
             }
-            awaitClose {
-                close()
-            }
-        } catch (e: Exception) {
-            trySend(ResultState.Error(e.message ?: "Unknown error occurred"))
-        }
 
+        // Properly remove listener when flow is closed
         awaitClose {
-            close()
+            listenerRegistration.remove()
         }
     }
+
 }
