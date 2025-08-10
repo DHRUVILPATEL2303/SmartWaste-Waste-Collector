@@ -14,6 +14,6 @@ data class RouteProgressModel(
 data class AreaProgress(
     val areaId: String = "",
     val areaName: String = "",
-    val isCompleted: Boolean = false,
-    val completedAt: Long? = null
+    var isCompleted: Boolean = false,
+    var completedAt: Long? = null
 )

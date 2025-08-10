@@ -16,6 +16,8 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
 @HiltViewModel
@@ -33,8 +35,8 @@ class RouteProgressViewModel @Inject constructor(
     private val _updateAreaCompletedState = MutableStateFlow(CommonRouteProgressState<Unit>())
     val updateAreaCompletedState = _updateAreaCompletedState.asStateFlow()
 
-    private val _markAreaAsCompletedState = MutableStateFlow(CommonRouteProgressState<Unit>())
-    val markAreaAsCompletedState = _markAreaAsCompletedState.asStateFlow()
+    private val _markRouteAsCompletedState = MutableStateFlow(CommonRouteProgressState<Unit>())
+    val markRouteAsCompletedState = _markRouteAsCompletedState.asStateFlow()
 
 
     private val _createAndSubmitRouteProgressState = MutableStateFlow(CommonRouteProgressState<Unit>())
@@ -73,11 +75,11 @@ class RouteProgressViewModel @Inject constructor(
         }
     }
 
-    fun updateAreaCompleted(routeId: String, areaId: String, isCompleted: Boolean) {
+    fun updateAreaCompleted(documentId: String, areaId: String, isCompleted: Boolean) {
         viewModelScope.launch {
 
             _updateAreaCompletedState.value = CommonRouteProgressState(isLoading = true)
-            val result=updateAreaCompletedUseCase.updateAreaCompleted(routeId, areaId, isCompleted)
+            val result=updateAreaCompletedUseCase.updateAreaCompleted(documentId, areaId, isCompleted)
 
             when (result) {
                 is ResultState.Success -> {
@@ -98,18 +100,18 @@ class RouteProgressViewModel @Inject constructor(
 
     }
 
-    fun markAreaAsCompleted(routeId: String) {
+    fun markRouteAsCompleted(documentId: String) {
         viewModelScope.launch {
-            _markAreaAsCompletedState.value = CommonRouteProgressState(isLoading = true)
-            val result = markAreaAsCompletedUseCase.markRouteAsCompleted(routeId)
+            _markRouteAsCompletedState.value = CommonRouteProgressState(isLoading = true)
+            val result = markAreaAsCompletedUseCase.markRouteAsCompleted(documentId)
             when (result) {
 
                 is ResultState.Success -> {
-                    _markAreaAsCompletedState.value = CommonRouteProgressState(success = result.data, isLoading = false)
+                    _markRouteAsCompletedState.value = CommonRouteProgressState(success = result.data, isLoading = false)
                 }
 
                 is ResultState.Error -> {
-                    _markAreaAsCompletedState.value = CommonRouteProgressState(error = result.message, isLoading = false)
+                    _markRouteAsCompletedState.value = CommonRouteProgressState(error = result.message, isLoading = false)
                 }
                 else -> {}
 
@@ -126,7 +128,7 @@ class RouteProgressViewModel @Inject constructor(
         viewModelScope.launch {
             _createAndSubmitRouteProgressState.value = CommonRouteProgressState(isLoading = true)
 
-            val today = java.time.LocalDate.now().toString()
+            val today = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)
             val areaProgressList = selectedRoute.areaList.map { areaInfo ->
                 AreaProgress(
                     areaId = areaInfo.areaId,
@@ -136,11 +138,15 @@ class RouteProgressViewModel @Inject constructor(
                 )
             }
 
+            val driverId = if (selectedRole.equals("Driver", ignoreCase = true)) FirebaseAuth.getInstance().currentUser!!.uid else ""
+            val collectorId = if (selectedRole.equals("Collector", ignoreCase = true)) FirebaseAuth.getInstance().currentUser!!.uid else ""
+
             val progressModel = RouteProgressModel(
+
                 routeId = selectedRoute.id,
                 date = today,
-                assignedCollectorId = if (selectedRole == "collector") FirebaseAuth.getInstance().currentUser!!.uid else "",
-                assignedDriverId = if (selectedRole == "driver") FirebaseAuth.getInstance().currentUser!!.uid else "",
+                assignedCollectorId = collectorId,
+                assignedDriverId = driverId,
                 assignedTruckId = selectedTruck.id,
                 areaProgress = areaProgressList,
                 isRouteCompleted = false
