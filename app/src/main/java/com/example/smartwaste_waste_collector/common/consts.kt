@@ -14,3 +14,5 @@ const val TRUCKS_PATH="trucks"
 const val ROUTE_PROGRESS_MODEL="route_progress"
 
 const val ROUTE_PATH="routes"
+
+const val WORKER_FEEDBACK_PATH="worker_feedback"

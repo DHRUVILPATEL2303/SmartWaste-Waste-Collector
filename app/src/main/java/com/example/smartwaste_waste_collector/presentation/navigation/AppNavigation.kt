@@ -34,6 +34,7 @@ import com.example.bottombar.model.IndicatorDirection
 import com.example.bottombar.model.IndicatorStyle
 import com.example.smartwaste_waste_collector.presentation.screens.authscreen.LoginScreenUI
 import com.example.smartwaste_waste_collector.presentation.screens.authscreen.SignUpScreenUI
+import com.example.smartwaste_waste_collector.presentation.screens.feedbackscreen.FeedBackScreenUI
 import com.example.smartwaste_waste_collector.presentation.screens.home.HomeScreenUI
 import com.example.smartwaste_waste_collector.presentation.screens.onboarding.OnBoardingScreenUI
 import com.example.smartwaste_waste_collector.presentation.viewmodels.authviewmodel.AuthViewModel
@@ -143,7 +144,7 @@ fun AppNavigation(
                 composable<Routes.HomeScreen> { HomeScreenUI(navController=navController) }
                 composable<Routes.ReportScreen> { ReportScreenUI(navController) }
                 composable<Routes.PointsScreen> { PointScreenUI(navController) }
-                composable<Routes.FeedBackScreen> { FeedbackScreenUI(navController) }
+                composable<Routes.FeedBackScreen> { FeedBackScreenUI(navController=navController) }
             }
         }
     }
@@ -166,4 +167,3 @@ val bottomBarItems = listOf(
 
 @Composable fun ReportScreenUI(navController: NavHostController) { /* TODO */ }
 @Composable fun PointScreenUI(navController: NavHostController) { /* TODO */ }
-@Composable fun FeedbackScreenUI(navController: NavHostController) { /* TODO */ }
