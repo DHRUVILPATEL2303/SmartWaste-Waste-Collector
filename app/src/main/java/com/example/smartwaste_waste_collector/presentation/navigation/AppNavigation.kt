@@ -37,6 +37,7 @@ import com.example.smartwaste_waste_collector.presentation.screens.authscreen.Si
 import com.example.smartwaste_waste_collector.presentation.screens.feedbackscreen.FeedBackScreenUI
 import com.example.smartwaste_waste_collector.presentation.screens.home.HomeScreenUI
 import com.example.smartwaste_waste_collector.presentation.screens.onboarding.OnBoardingScreenUI
+import com.example.smartwaste_waste_collector.presentation.screens.pointsscreen.GivePointsScreenUI
 import com.example.smartwaste_waste_collector.presentation.viewmodels.authviewmodel.AuthViewModel
 import com.example.smartwaste_waste_collector.presentation.viewmodels.onBoardingViewModel.OnBoardingViewModel
 import com.google.firebase.auth.FirebaseAuth
@@ -143,7 +144,7 @@ fun AppNavigation(
             navigation<SubNavigation.HomeRoutes>(startDestination = Routes.HomeScreen) {
                 composable<Routes.HomeScreen> { HomeScreenUI(navController=navController) }
                 composable<Routes.ReportScreen> { ReportScreenUI(navController) }
-                composable<Routes.PointsScreen> { PointScreenUI(navController) }
+                composable<Routes.PointsScreen> { GivePointsScreenUI(navController=navController) }
                 composable<Routes.FeedBackScreen> { FeedBackScreenUI(navController=navController) }
             }
         }

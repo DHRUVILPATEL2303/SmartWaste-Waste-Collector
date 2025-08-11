@@ -7,6 +7,7 @@ import com.example.smartwaste_waste_collector.data.repoimpl.dailyassignrepoimpl.
 import com.example.smartwaste_waste_collector.data.repoimpl.routeprogressrepoimpl.RouteProgressRepositoryImpl
 import com.example.smartwaste_waste_collector.data.repoimpl.routerepositryimpl.RouteRepositryImpl
 import com.example.smartwaste_waste_collector.data.repoimpl.truckrepoimpl.TruckRepositryImpl
+import com.example.smartwaste_waste_collector.data.repoimpl.userpointrepoimpl.UserPointRepositryImpl
 import com.example.smartwaste_waste_collector.data.repoimpl.workerfeedbackrepoimpl.WorkerFeedbackRepositryImpl
 import com.example.smartwaste_waste_collector.domain.repo.RouteProgressRepo
 import com.example.smartwaste_waste_collector.domain.repo.authrepo.AuthRepositry
@@ -14,6 +15,7 @@ import com.example.smartwaste_waste_collector.domain.repo.dailyAssignRepo.DailyA
 import com.example.smartwaste_waste_collector.domain.repo.feedbackrepo.WorkerFeedBackRepositry
 import com.example.smartwaste_waste_collector.domain.repo.trucksrepo.RouteRepositry
 import com.example.smartwaste_waste_collector.domain.repo.trucksrepo.TrucksRepositry
+import com.example.smartwaste_waste_collector.domain.repo.userpointrepo.UserPointRepositry
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -51,4 +53,9 @@ abstract class DomainModule {
     @Singleton
     @Binds
     abstract fun provideWorkerFeedbackRepo(RepositryImpl: WorkerFeedbackRepositryImpl): WorkerFeedBackRepositry
+
+
+    @Singleton
+    @Binds
+    abstract fun provideUserPointRepositry(RepositryImpl: UserPointRepositryImpl): UserPointRepositry
 }

@@ -16,3 +16,6 @@ const val ROUTE_PROGRESS_MODEL="route_progress"
 const val ROUTE_PATH="routes"
 
 const val WORKER_FEEDBACK_PATH="worker_feedback"
+
+
+const val USER_POINTS_PATH="user_points"

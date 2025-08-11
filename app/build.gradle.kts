@@ -92,7 +92,21 @@ dependencies {
 
 //    implementation("androidx.core:core-splashscreen:1.0.1")
 
-    implementation ("com.canopas.compose-animated-navigationbar:bottombar:1.0.1")
+    implementation ("com.canopas.compose-animated-navigationbar:bottombar:1.0.2")
 
     implementation("androidx.compose.material:material-icons-extended-android:1.7.8")
+
+    implementation("com.google.mlkit:barcode-scanning:17.3.0")
+
+
+
+
+
+    val camerax_version = "1.3.0" // Use the latest stable version
+    implementation ("androidx.camera:camera-core:$camerax_version")
+    implementation ("androidx.camera:camera-camera2:$camerax_version")
+    implementation ("androidx.camera:camera-lifecycle:$camerax_version")
+    implementation ("androidx.camera:camera-view:$camerax_version")
+    implementation("com.google.guava:guava:33.3.1-jre")
+
 }
