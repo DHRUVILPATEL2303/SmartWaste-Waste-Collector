@@ -27,6 +27,11 @@ class DailyAssignViewModel @Inject constructor(
     private val _submitAssignState = MutableStateFlow(CommonDailyAssignState<String>())
     val submitAssignState = _submitAssignState.asStateFlow()
 
+
+    init {
+        getDailyAssignment()
+    }
+
     fun getDailyAssignment() {
         viewModelScope.launch(Dispatchers.IO) {
             _dailyAssignState.value = CommonDailyAssignState(isLoading = true)

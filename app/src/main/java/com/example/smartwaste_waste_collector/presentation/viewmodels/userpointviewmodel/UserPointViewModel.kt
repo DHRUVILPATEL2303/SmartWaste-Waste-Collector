@@ -1,4 +1,3 @@
-// presentation/viewmodels/userpointviewmodel/UserPointViewModel.kt
 
 package com.example.smartwaste_waste_collector.presentation.viewmodels.userpointviewmodel
 

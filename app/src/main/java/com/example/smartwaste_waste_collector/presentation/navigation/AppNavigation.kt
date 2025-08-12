@@ -41,20 +41,24 @@ import com.example.smartwaste_waste_collector.presentation.screens.pointsscreen.
 import com.example.smartwaste_waste_collector.presentation.screens.report.ReportScreenUI
 import com.example.smartwaste_waste_collector.presentation.viewmodels.authviewmodel.AuthViewModel
 import com.example.smartwaste_waste_collector.presentation.viewmodels.onBoardingViewModel.OnBoardingViewModel
+import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 
 
 @Composable
 fun AppNavigation(
     viewModel: AuthViewModel = hiltViewModel(),
     onBoardingViewModel: OnBoardingViewModel = hiltViewModel(),
+    isLogin : FirebaseUser?,
+    isOnboardingCompleted : Boolean
 ) {
     val navController = rememberNavController()
-    val isOnboardingCompleted by onBoardingViewModel.onboardingCompleted.collectAsState(initial = false)
+
 
     val startDestination = if (!isOnboardingCompleted) {
         SubNavigation.OnBoardingRoutes
-    } else if (FirebaseAuth.getInstance().currentUser!=null){
+    } else if (isLogin!=null){
         SubNavigation.HomeRoutes
     } else {
         SubNavigation.AuthRoutes
