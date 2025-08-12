@@ -41,6 +41,7 @@ import com.example.smartwaste_waste_collector.presentation.screens.pointsscreen.
 import com.example.smartwaste_waste_collector.presentation.screens.report.ReportScreenUI
 import com.example.smartwaste_waste_collector.presentation.viewmodels.authviewmodel.AuthViewModel
 import com.example.smartwaste_waste_collector.presentation.viewmodels.onBoardingViewModel.OnBoardingViewModel
+import com.example.smartwaste_waste_collector.presentation.viewmodels.onBoardingViewModel.OnboardingState
 import com.google.firebase.auth.FirebaseAuth
 
 
@@ -50,14 +51,30 @@ fun AppNavigation(
     onBoardingViewModel: OnBoardingViewModel = hiltViewModel(),
 ) {
     val navController = rememberNavController()
-    val isOnboardingCompleted by onBoardingViewModel.onboardingCompleted.collectAsState(initial = false)
+    val onboardingState by onBoardingViewModel.onboardingState.collectAsState()
 
-    val startDestination = if (!isOnboardingCompleted) {
-        SubNavigation.OnBoardingRoutes
-    } else if (FirebaseAuth.getInstance().currentUser!=null){
-        SubNavigation.HomeRoutes
-    } else {
-        SubNavigation.AuthRoutes
+    // Wait for onboarding state to load before determining start destination
+    val startDestination = when (onboardingState) {
+        is OnboardingState.Loading -> {
+            // Show a loading screen or return early to prevent navigation decisions
+            // For now, we'll use a temporary destination and return early
+            SubNavigation.OnBoardingRoutes // This will be overridden once loaded
+        }
+        is OnboardingState.Loaded -> {
+            if (!onboardingState.isCompleted) {
+                SubNavigation.OnBoardingRoutes
+            } else if (FirebaseAuth.getInstance().currentUser != null) {
+                SubNavigation.HomeRoutes
+            } else {
+                SubNavigation.AuthRoutes
+            }
+        }
+    }
+
+    // Don't render navigation until onboarding state is loaded
+    if (onboardingState is OnboardingState.Loading) {
+        // Show loading screen or just return to prevent premature navigation
+        return
     }
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
