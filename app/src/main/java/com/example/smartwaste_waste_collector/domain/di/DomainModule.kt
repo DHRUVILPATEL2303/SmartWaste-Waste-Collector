@@ -4,6 +4,7 @@ import com.example.smartwaste_waste_collector.data.models.DailyAssignment
 import com.example.smartwaste_waste_collector.data.models.WorkerRole
 import com.example.smartwaste_waste_collector.data.repoimpl.authrepoimpl.AuthRepositryImpl
 import com.example.smartwaste_waste_collector.data.repoimpl.dailyassignrepoimpl.DailyAssignRepositryImpl
+import com.example.smartwaste_waste_collector.data.repoimpl.reportrepoimpl.ReportRepositryImpl
 import com.example.smartwaste_waste_collector.data.repoimpl.routeprogressrepoimpl.RouteProgressRepositoryImpl
 import com.example.smartwaste_waste_collector.data.repoimpl.routerepositryimpl.RouteRepositryImpl
 import com.example.smartwaste_waste_collector.data.repoimpl.truckrepoimpl.TruckRepositryImpl
@@ -13,6 +14,7 @@ import com.example.smartwaste_waste_collector.domain.repo.RouteProgressRepo
 import com.example.smartwaste_waste_collector.domain.repo.authrepo.AuthRepositry
 import com.example.smartwaste_waste_collector.domain.repo.dailyAssignRepo.DailyAssignRepository
 import com.example.smartwaste_waste_collector.domain.repo.feedbackrepo.WorkerFeedBackRepositry
+import com.example.smartwaste_waste_collector.domain.repo.reportrepo.ReportRepositry
 import com.example.smartwaste_waste_collector.domain.repo.trucksrepo.RouteRepositry
 import com.example.smartwaste_waste_collector.domain.repo.trucksrepo.TrucksRepositry
 import com.example.smartwaste_waste_collector.domain.repo.userpointrepo.UserPointRepositry
@@ -58,4 +60,9 @@ abstract class DomainModule {
     @Singleton
     @Binds
     abstract fun provideUserPointRepositry(RepositryImpl: UserPointRepositryImpl): UserPointRepositry
+
+
+    @Singleton
+    @Binds
+    abstract fun provideReportRepositry(RepositryImpl: ReportRepositryImpl): ReportRepositry
 }
