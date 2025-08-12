@@ -25,11 +25,12 @@ class RouteProgressViewModel @Inject constructor(
     private val getRouteProgressUseCase: GetRouteProgressUseCase,
     private val updateAreaCompletedUseCase: UpdateAreaCompletedUseCase,
     private val markAreaAsCompletedUseCase: MarkAreaAsCompletedUseCase,
-    private val createAndSubmitRouteProgressUseCase: CreateAndSubmitRouteProgressUseCase
+    private val createAndSubmitRouteProgressUseCase: CreateAndSubmitRouteProgressUseCase,
+    private val firebaseAuth: FirebaseAuth
 ) : ViewModel(){
 
 
-    private val _routeProgressState = MutableStateFlow(CommonRouteProgressState<RouteProgressModel>())
+    private val _routeProgressState = MutableStateFlow(CommonRouteProgressState<RouteProgressModel?>())
     val routeProgressState = _routeProgressState.asStateFlow()
 
     private val _updateAreaCompletedState = MutableStateFlow(CommonRouteProgressState<Unit>())
@@ -43,61 +44,41 @@ class RouteProgressViewModel @Inject constructor(
     val createAndSubmitRouteProgressState = _createAndSubmitRouteProgressState.asStateFlow()
 
 
-    init {
-        getRouteProgress()
-    }
-
-
 
     fun getRouteProgress() {
-        viewModelScope.launch {
+        if(firebaseAuth.currentUser?.uid?.isEmpty() == true) return
 
+        viewModelScope.launch {
             getRouteProgressUseCase.getRouteProgress().collect {
                 when (it) {
-
                     is ResultState.Success -> {
                         _routeProgressState.value = CommonRouteProgressState(success = it.data, isLoading = false)
                     }
-
                     is ResultState.Error -> {
                         _routeProgressState.value = CommonRouteProgressState(error = it.message, isLoading = false)
                     }
-
                     is ResultState.Loading -> {
                         _routeProgressState.value = CommonRouteProgressState(isLoading = true)
                     }
-
-
                 }
-
             }
-
         }
     }
 
     fun updateAreaCompleted(documentId: String, areaId: String, isCompleted: Boolean) {
         viewModelScope.launch {
-
             _updateAreaCompletedState.value = CommonRouteProgressState(isLoading = true)
-            val result=updateAreaCompletedUseCase.updateAreaCompleted(documentId, areaId, isCompleted)
-
+            val result = updateAreaCompletedUseCase.updateAreaCompleted(documentId, areaId, isCompleted)
             when (result) {
                 is ResultState.Success -> {
                     _updateAreaCompletedState.value = CommonRouteProgressState(success = result.data, isLoading = false)
                 }
-
                 is ResultState.Error -> {
                     _updateAreaCompletedState.value = CommonRouteProgressState(error = result.message, isLoading = false)
-
-
                 }
                 else -> {}
-
-
             }
-
         }
-
     }
 
     fun markRouteAsCompleted(documentId: String) {
@@ -105,18 +86,14 @@ class RouteProgressViewModel @Inject constructor(
             _markRouteAsCompletedState.value = CommonRouteProgressState(isLoading = true)
             val result = markAreaAsCompletedUseCase.markRouteAsCompleted(documentId)
             when (result) {
-
                 is ResultState.Success -> {
                     _markRouteAsCompletedState.value = CommonRouteProgressState(success = result.data, isLoading = false)
                 }
-
                 is ResultState.Error -> {
                     _markRouteAsCompletedState.value = CommonRouteProgressState(error = result.message, isLoading = false)
                 }
                 else -> {}
-
             }
-
         }
     }
 
@@ -128,6 +105,12 @@ class RouteProgressViewModel @Inject constructor(
         viewModelScope.launch {
             _createAndSubmitRouteProgressState.value = CommonRouteProgressState(isLoading = true)
 
+            val currentUserId = firebaseAuth.currentUser?.uid
+            if (currentUserId.isNullOrEmpty()) {
+                _createAndSubmitRouteProgressState.value = CommonRouteProgressState(error = "User not authenticated.", isLoading = false)
+                return@launch
+            }
+
             val today = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)
             val areaProgressList = selectedRoute.areaList.map { areaInfo ->
                 AreaProgress(
@@ -138,18 +121,17 @@ class RouteProgressViewModel @Inject constructor(
                 )
             }
 
-            val driverId = if (selectedRole.equals("Driver", ignoreCase = true)) FirebaseAuth.getInstance().currentUser!!.uid else ""
-            val collectorId = if (selectedRole.equals("Collector", ignoreCase = true)) FirebaseAuth.getInstance().currentUser!!.uid else ""
+            val driverId = if (selectedRole.equals("Driver", ignoreCase = true)) currentUserId else ""
+            val collectorId = if (selectedRole.equals("Collector", ignoreCase = true)) currentUserId else ""
 
             val progressModel = RouteProgressModel(
-
                 routeId = selectedRoute.id,
                 date = today,
                 assignedCollectorId = collectorId,
                 assignedDriverId = driverId,
                 assignedTruckId = selectedTruck.id,
                 areaProgress = areaProgressList,
-                isRouteCompleted = false
+                routeCompleted = false
             )
 
             val result = createAndSubmitRouteProgressUseCase.createAndSubmitRouteProgress(progressModel)
@@ -172,6 +154,6 @@ class RouteProgressViewModel @Inject constructor(
 
 data class CommonRouteProgressState<T>(
     val isLoading : Boolean = false,
-    val success : T ?= null,
-    val error : String =""
+    val success : T? = null,
+    val error : String = ""
 )

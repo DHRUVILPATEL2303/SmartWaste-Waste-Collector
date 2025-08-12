@@ -91,7 +91,7 @@ fun AppNavigation(
                     indicatorStyle = IndicatorStyle.FILLED,
                     containerShape = RoundedCornerShape(50.dp),
                     bottomBarHeight = 65.dp,
-                    modifier = Modifier.padding(16.dp).navigationBarsPadding(),
+                    modifier = Modifier.navigationBarsPadding().padding(start=16.dp, end = 16.dp),
                     indicatorColor = Color.White.copy(alpha = 0.4f),
                     indicatorDirection = IndicatorDirection.BOTTOM
                 ) {
@@ -137,7 +137,7 @@ fun AppNavigation(
         NavHost(
             navController = navController,
             startDestination = startDestination,
-            modifier = Modifier.padding(paddingValues).fillMaxSize()
+            modifier = Modifier.fillMaxSize()
         ) {
             navigation<SubNavigation.OnBoardingRoutes>(startDestination = Routes.OnBoardingScreen) {
                 composable<Routes.OnBoardingScreen> { OnBoardingScreenUI(navController=navController) }

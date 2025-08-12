@@ -6,6 +6,7 @@ import com.example.smartwaste_waste_collector.common.ResultState
 import com.example.smartwaste_waste_collector.data.models.RouteProgressModel
 import com.example.smartwaste_waste_collector.domain.repo.RouteProgressRepo
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.Filter
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -21,66 +22,51 @@ class RouteProgressRepositoryImpl @Inject constructor(
 ) : RouteProgressRepo {
 
 
+
+
     override fun getTodayRouteProgress(): Flow<ResultState<RouteProgressModel?>> = callbackFlow {
         trySend(ResultState.Loading)
 
         val currentUserId = firebaseAuth.currentUser?.uid
-        if (currentUserId == null) {
-            trySend(ResultState.Error("User not logged in"))
+        if (currentUserId.isNullOrEmpty()) {
+            trySend(ResultState.Success(null))
             close()
             return@callbackFlow
         }
 
-        val today = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)
-        val collection = firebaseFirestore.collection(ROUTE_PROGRESS_MODEL)
+        val todayDate = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)
 
-        var collectorResult: RouteProgressModel? = null
-        var driverResult: RouteProgressModel? = null
-        var collectorListenerDone = false
-        var driverListenerDone = false
 
-        fun trySendResult() {
-            if (collectorListenerDone && driverListenerDone) {
-                val finalResult = collectorResult ?: driverResult
-                trySend(ResultState.Success(finalResult))
-                channel.close()
+        val query = firebaseFirestore.collection(ROUTE_PROGRESS_MODEL)
+            .whereEqualTo("date", todayDate)
+            .where(
+                Filter.or(
+                    Filter.equalTo("assignedDriverId", currentUserId),
+                    Filter.equalTo("assignedCollectorId", currentUserId)
+                )
+            )
+            .limit(1)
+
+        val listener = query.addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                trySend(ResultState.Error(error.message ?: "An unknown error occurred."))
+                close()
+                return@addSnapshotListener
+            }
+
+            if (snapshot != null && !snapshot.isEmpty) {
+                val progress = snapshot.documents.first().toObject(RouteProgressModel::class.java)
+                trySend(ResultState.Success(progress))
+            } else {
+
+                trySend(ResultState.Success(null))
             }
         }
 
-        val listener1 = collection
-            .whereEqualTo("date", today)
-            .whereEqualTo("assignedCollectorId", currentUserId)
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    trySend(ResultState.Error(error.message ?: "Unknown error"))
-                    return@addSnapshotListener
-                }
-                if (snapshot != null && !snapshot.isEmpty) {
-                    collectorResult = snapshot.documents[0].toObject(RouteProgressModel::class.java)
-                }
-                collectorListenerDone = true
-                trySendResult()
-            }
-
-
-        val listener2 = collection
-            .whereEqualTo("date", today)
-            .whereEqualTo("assignedDriverId", currentUserId)
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    trySend(ResultState.Error(error.message ?: "Unknown error"))
-                    return@addSnapshotListener
-                }
-                if (snapshot != null && !snapshot.isEmpty) {
-                    driverResult = snapshot.documents[0].toObject(RouteProgressModel::class.java)
-                }
-                driverListenerDone = true
-                trySendResult()
-            }
 
         awaitClose {
-            listener1.remove()
-            listener2.remove()
+            Log.d("RouteProgressRepo", "Closing today's route progress listener.")
+            listener.remove()
         }
     }
 
@@ -143,13 +129,15 @@ class RouteProgressRepositoryImpl @Inject constructor(
 
             val snapshot = docRef.get().await()
             if (snapshot.exists()) {
-                val existingProgress = snapshot.toObject(RouteProgressModel::class.java)!!
                 val updates = mutableMapOf<String, Any>()
                 if (newRouteProgress.assignedDriverId.isNotEmpty()) {
                     updates["assignedDriverId"] = newRouteProgress.assignedDriverId
                 }
                 if (newRouteProgress.assignedCollectorId.isNotEmpty()) {
                     updates["assignedCollectorId"] = newRouteProgress.assignedCollectorId
+                }
+                if (newRouteProgress.assignedTruckId.isNotEmpty()) {
+                    updates["assignedTruckId"] = newRouteProgress.assignedTruckId
                 }
                 docRef.update(updates).await()
             } else {
