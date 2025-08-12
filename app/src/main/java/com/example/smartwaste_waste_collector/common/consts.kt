@@ -19,3 +19,7 @@ const val WORKER_FEEDBACK_PATH="worker_feedback"
 
 
 const val USER_POINTS_PATH="user_points"
+
+const val USERS_PATH="users"
+
+const val REPORTS_PATH="reports"

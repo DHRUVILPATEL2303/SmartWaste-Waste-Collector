@@ -1,6 +1,7 @@
 package com.example.smartwaste_waste_collector.data.repoimpl.userpointrepoimpl
 
 import com.example.smartwaste_waste_collector.common.ResultState
+import com.example.smartwaste_waste_collector.common.USERS_PATH
 import com.example.smartwaste_waste_collector.common.USER_POINTS_PATH
 import com.example.smartwaste_waste_collector.data.models.UserPointModel
 import com.example.smartwaste_waste_collector.domain.repo.userpointrepo.UserPointRepositry
@@ -22,10 +23,20 @@ class UserPointRepositryImpl @Inject constructor(
             trySend(ResultState.Loading)
 
             val workerId = firebaseAuth.currentUser?.uid
-
-            val userPointModelWithWorkerId = userPointModel.copy(workerID = workerId.toString())
+            val userPointModelWithWorkerId = userPointModel.copy(workerID = workerId.orEmpty())
 
             try {
+                val userDocRef = firebaseFirestore.collection(USERS_PATH).document(userPointModel.userId)
+                val snapshot = userDocRef.get().await()
+
+                val currentTotalPointsStr = snapshot.getString("totalPoints") ?: "0"
+                val currentTotalPoints = currentTotalPointsStr.toLongOrNull() ?: 0L
+
+                val newPoints = userPointModel.points.toLongOrNull() ?: 0L
+                val updatedTotalPoints = (currentTotalPoints + newPoints).toString()
+
+                userDocRef.update("totalPoints", updatedTotalPoints).await()
+
                 firebaseFirestore
                     .collection(USER_POINTS_PATH)
                     .document()
@@ -37,8 +48,6 @@ class UserPointRepositryImpl @Inject constructor(
                 trySend(ResultState.Error(e.message ?: "Unknown error"))
             }
 
-            awaitClose {
-                close()
-            }
+            awaitClose { close() }
         }
 }
