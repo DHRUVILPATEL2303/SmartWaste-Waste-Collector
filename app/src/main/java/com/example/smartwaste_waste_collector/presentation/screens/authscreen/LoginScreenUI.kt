@@ -61,7 +61,7 @@ fun LoginScreenUI(
 
 
             Image(
-                painter = painterResource(id = R.drawable.onboarding_3),
+                painter = painterResource(id = R.drawable.ic_launcher_foreground),
                 contentDescription = "Login Illustration",
                 modifier = Modifier
                     .size(180.dp)

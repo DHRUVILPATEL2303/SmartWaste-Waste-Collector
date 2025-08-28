@@ -109,4 +109,11 @@ dependencies {
     implementation ("androidx.camera:camera-view:$camerax_version")
     implementation("com.google.guava:guava:33.3.1-jre")
 
+    implementation("org.osmdroid:osmdroid-android:6.1.16")
+
+
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
+    implementation("com.google.android.gms:play-services-location:21.3.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.1")
+
 }

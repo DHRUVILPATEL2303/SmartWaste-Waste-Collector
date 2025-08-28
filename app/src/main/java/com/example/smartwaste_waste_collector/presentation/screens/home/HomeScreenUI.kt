@@ -1,5 +1,19 @@
 package com.example.smartwaste_waste_collector.presentation.screens.home
 
+
+import android.Manifest
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.material.icons.filled.GpsFixed
+import androidx.compose.material.icons.filled.MyLocation
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
+import com.example.smartwaste_waste_collector.services.LocationForegroundService
+
+
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -79,6 +93,46 @@ fun HomeScreenUI(
     val coroutineScope = rememberCoroutineScope()
 
 
+
+    val context = LocalContext.current
+    var isTrackingStarted by remember { mutableStateOf(false) }
+
+    val locationPermissions = remember {
+        mutableListOf(
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+        ).apply {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                add(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+    }
+
+    fun startLocationService(routeId: String) {
+        val intent = Intent(context, LocationForegroundService::class.java).apply {
+            putExtra("ROUTE_ID", routeId)
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            context.startForegroundService(intent)
+        } else {
+            context.startService(intent)
+        }
+        isTrackingStarted = true
+    }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions(),
+        onResult = { permissions ->
+            val permissionsGranted = permissions.values.reduce { acc, isGranted -> acc && isGranted }
+            if (permissionsGranted) {
+                routeProgressState.success?.routeId?.let { startLocationService(it) }
+            } else {
+            }
+        }
+    )
+
+
+
     LaunchedEffect(routeProgressState) {
         if (!routeProgressState.isLoading) {
             val progress = routeProgressState.success
@@ -112,6 +166,31 @@ fun HomeScreenUI(
         modifier = modifier.fillMaxSize(),
         topBar = {
             HomeTopAppBar(hasRouteProgress = routeProgressState.success != null && !showDialog)
+        },
+        floatingActionButton = {
+            if (routeProgressState.success != null && !showDialog) {
+                ExtendedFloatingActionButton(
+                    onClick = {
+                        val allPermissionsGranted = locationPermissions.all {
+                            ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
+                        }
+                        if (allPermissionsGranted) {
+                            startLocationService(routeProgressState.success!!.routeId)
+                        } else {
+                            permissionLauncher.launch(locationPermissions.toTypedArray())
+                        }
+                    },
+                    icon = {
+                        Icon(
+                            if (isTrackingStarted) Icons.Default.GpsFixed else Icons.Default.MyLocation,
+                            contentDescription = "Start Location Tracking"
+                        )
+                    },
+                    text = { Text(if (isTrackingStarted) "Tracking Active" else "Start Tracking") },
+                    containerColor = if(isTrackingStarted) MaterialTheme.colorScheme.tertiaryContainer else MaterialTheme.colorScheme.primary,
+                    contentColor = if(isTrackingStarted) MaterialTheme.colorScheme.onTertiaryContainer else MaterialTheme.colorScheme.onPrimary,
+                )
+            }
         },
         containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
@@ -215,6 +294,8 @@ fun HomeScreenUI(
         )
     }
 }
+
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

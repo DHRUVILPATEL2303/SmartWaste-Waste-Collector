@@ -69,7 +69,7 @@ fun SignUpScreenUI(
 
 
                 Image(
-                    painter = painterResource(id = R.drawable.onboarding_3), // Replace with your logo
+                    painter = painterResource(id = R.drawable.ic_launcher_foreground), // Replace with your logo
                     contentDescription = "Sign Up Illustration",
                     modifier = Modifier
                         .size(180.dp)
