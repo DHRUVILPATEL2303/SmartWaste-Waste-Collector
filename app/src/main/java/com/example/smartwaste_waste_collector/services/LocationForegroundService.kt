@@ -63,7 +63,7 @@ class LocationForegroundService : Service() {
     private fun startLocationUpdates() {
         val request = LocationRequest.Builder(
             Priority.PRIORITY_HIGH_ACCURACY,
-            60L // 1 minute
+            60_000L // 1 minute
         ).setMinUpdateIntervalMillis(30_000L).build()
 
         fusedLocationClient.requestLocationUpdates(

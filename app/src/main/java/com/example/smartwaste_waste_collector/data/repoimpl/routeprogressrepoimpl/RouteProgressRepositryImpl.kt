@@ -85,7 +85,10 @@ class RouteProgressRepositoryImpl @Inject constructor(
                     if (area.areaId == areaId) {
                         area.copy(
                             isCompleted = isCompleted,
-                            completedAt = if (isCompleted) System.currentTimeMillis() else null
+                            completedAt = if (isCompleted) System.currentTimeMillis() else area.completedAt,
+                            latitude = area.latitude,
+                            longitude = area.longitude
+
                         )
                     } else {
                         area
