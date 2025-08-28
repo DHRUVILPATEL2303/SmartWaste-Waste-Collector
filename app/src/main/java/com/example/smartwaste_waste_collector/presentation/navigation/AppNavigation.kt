@@ -28,6 +28,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
 import com.example.bottombar.AnimatedBottomBar
 import com.example.bottombar.components.BottomBarItem
 import com.example.bottombar.model.IndicatorDirection
@@ -39,6 +40,7 @@ import com.example.smartwaste_waste_collector.presentation.screens.home.HomeScre
 import com.example.smartwaste_waste_collector.presentation.screens.onboarding.OnBoardingScreenUI
 import com.example.smartwaste_waste_collector.presentation.screens.pointsscreen.GivePointsScreenUI
 import com.example.smartwaste_waste_collector.presentation.screens.report.ReportScreenUI
+import com.example.smartwaste_waste_collector.presentation.screens.routemapsscreen.RouteMapScreenUI
 import com.example.smartwaste_waste_collector.presentation.viewmodels.authviewmodel.AuthViewModel
 import com.example.smartwaste_waste_collector.presentation.viewmodels.onBoardingViewModel.OnBoardingViewModel
 import com.google.firebase.Firebase
@@ -151,10 +153,15 @@ fun AppNavigation(
                 composable<Routes.ReportScreen> { ReportScreenUI() }
                 composable<Routes.PointsScreen> { GivePointsScreenUI(navController=navController) }
                 composable<Routes.FeedBackScreen> { FeedBackScreenUI(navController=navController) }
+                composable<Routes.RouteMapsScreen> {
+                    val data=it.toRoute<Routes.RouteMapsScreen>()
+                    RouteMapScreenUI(navController=navController, routeId = data.routeId)
+                }
             }
         }
     }
 }
+
 
 
 

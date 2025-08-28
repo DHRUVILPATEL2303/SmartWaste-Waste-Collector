@@ -151,4 +151,23 @@ class RouteProgressRepositoryImpl @Inject constructor(
             ResultState.Error(e.message ?: "Error creating route progress")
         }
     }
+
+    override suspend fun getRouteProgressByRouteID(routeId: String): ResultState<RouteProgressModel> {
+        return try {
+            val snapshot = firebaseFirestore.collection(ROUTE_PROGRESS_MODEL)
+                .document(routeId)
+                .get()
+                .await()
+
+            val progress = snapshot.toObject(RouteProgressModel::class.java)
+
+            if (progress != null) {
+                ResultState.Success(progress)
+            } else {
+                ResultState.Error("No route progress found for this routeId")
+            }
+        } catch (e: Exception) {
+            ResultState.Error(e.message ?: "Error fetching route progress")
+        }
+    }
 }

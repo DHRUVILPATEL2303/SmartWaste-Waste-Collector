@@ -22,5 +22,7 @@ interface RouteProgressRepo {
 
     suspend fun createAndSubmitRouteProgress(routeProgressModel: RouteProgressModel): ResultState<Unit>
 
+    suspend fun getRouteProgressByRouteID(routeId : String) : ResultState<RouteProgressModel>
+
 
 }

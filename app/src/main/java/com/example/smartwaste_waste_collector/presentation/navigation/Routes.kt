@@ -30,6 +30,11 @@ sealed class Routes {
     @Serializable
     object ProfileScreen
 
+    @Serializable
+    data class RouteMapsScreen(
+        val routeId : String
+    )
+
 }
 
 

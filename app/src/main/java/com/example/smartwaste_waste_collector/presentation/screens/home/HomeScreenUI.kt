@@ -61,6 +61,7 @@ import com.example.smartwaste_waste_collector.data.models.AreaProgress
 import com.example.smartwaste_waste_collector.data.models.RouteModel
 import com.example.smartwaste_waste_collector.data.models.RouteProgressModel
 import com.example.smartwaste_waste_collector.data.models.TruckModel
+import com.example.smartwaste_waste_collector.presentation.navigation.Routes
 import com.example.smartwaste_waste_collector.presentation.viewmodels.routeprogressviewmodel.RouteProgressViewModel
 import com.example.smartwaste_waste_collector.presentation.viewmodels.rrouteviewmodel.CommonRouteState
 import com.example.smartwaste_waste_collector.presentation.viewmodels.rrouteviewmodel.RouteViewModel
@@ -165,7 +166,12 @@ fun HomeScreenUI(
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
-            HomeTopAppBar(hasRouteProgress = routeProgressState.success != null && !showDialog)
+            // --- MODIFIED CALL TO PASS NAVCONTROLLER AND ROUTE ID ---
+            HomeTopAppBar(
+                hasRouteProgress = routeProgressState.success != null && !showDialog,
+                routeId = routeProgressState.success?.routeId,
+                navController = navController
+            )
         },
         floatingActionButton = {
             if (routeProgressState.success != null && !showDialog) {
@@ -299,7 +305,11 @@ fun HomeScreenUI(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun HomeTopAppBar(hasRouteProgress: Boolean) {
+private fun HomeTopAppBar(
+    hasRouteProgress: Boolean,
+    routeId: String?, // ADDED: To receive the current route ID
+    navController: NavHostController // ADDED: To handle navigation
+) {
     TopAppBar(
         title = {
             Row(
@@ -326,6 +336,21 @@ private fun HomeTopAppBar(hasRouteProgress: Boolean) {
                             color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
                         )
                     }
+                }
+            }
+        },
+        // --- ADDED: Actions block for the map icon ---
+        actions = {
+            if (hasRouteProgress && routeId != null) {
+                IconButton(onClick = {
+
+                    navController.navigate(Routes.RouteMapsScreen(routeId))
+                }) {
+                    Icon(
+                        imageVector = Icons.Default.Map,
+                        contentDescription = "Open Map",
+                        tint = MaterialTheme.colorScheme.onPrimary
+                    )
                 }
             }
         },

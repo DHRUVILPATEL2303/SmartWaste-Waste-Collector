@@ -8,13 +8,16 @@ import com.example.smartwaste_waste_collector.data.models.RouteModel
 import com.example.smartwaste_waste_collector.data.models.RouteProgressModel
 import com.example.smartwaste_waste_collector.data.models.TruckModel
 import com.example.smartwaste_waste_collector.domain.usecases.routeprogressusecase.CreateAndSubmitRouteProgressUseCase
+import com.example.smartwaste_waste_collector.domain.usecases.routeprogressusecase.GetRouteProgressByIdUseCase
 import com.example.smartwaste_waste_collector.domain.usecases.routeprogressusecase.GetRouteProgressUseCase
 import com.example.smartwaste_waste_collector.domain.usecases.routeprogressusecase.MarkAreaAsCompletedUseCase
 import com.example.smartwaste_waste_collector.domain.usecases.routeprogressusecase.UpdateAreaCompletedUseCase
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.handleCoroutineException
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -26,6 +29,7 @@ class RouteProgressViewModel @Inject constructor(
     private val updateAreaCompletedUseCase: UpdateAreaCompletedUseCase,
     private val markAreaAsCompletedUseCase: MarkAreaAsCompletedUseCase,
     private val createAndSubmitRouteProgressUseCase: CreateAndSubmitRouteProgressUseCase,
+    private val getRouteProgressByIdUseCase: GetRouteProgressByIdUseCase,
     private val firebaseAuth: FirebaseAuth
 ) : ViewModel(){
 
@@ -42,6 +46,9 @@ class RouteProgressViewModel @Inject constructor(
 
     private val _createAndSubmitRouteProgressState = MutableStateFlow(CommonRouteProgressState<Unit>())
     val createAndSubmitRouteProgressState = _createAndSubmitRouteProgressState.asStateFlow()
+
+    private val _getRouteProgressByIdState= MutableStateFlow(CommonRouteProgressState<RouteProgressModel>())
+    val getRouteProgressState = _getRouteProgressByIdState.asStateFlow()
 
 
 
@@ -149,6 +156,27 @@ class RouteProgressViewModel @Inject constructor(
             }
         }
     }
+
+    fun getRouteProgressById(routeID : String){
+        viewModelScope.launch(Dispatchers.IO) {
+            _getRouteProgressByIdState.value= CommonRouteProgressState(isLoading = true)
+            val result=getRouteProgressByIdUseCase.getRouteProgressById(routeID)
+
+            when(result){
+                is ResultState.Error -> {
+                    _getRouteProgressByIdState.value= CommonRouteProgressState(error = result.message, isLoading = false)
+
+                }
+                is ResultState.Success-> {
+                    _getRouteProgressByIdState.value= CommonRouteProgressState(isLoading = false, success = result.data)
+                }
+                else -> {
+
+                }
+            }
+        }
+    }
+
 }
 
 
