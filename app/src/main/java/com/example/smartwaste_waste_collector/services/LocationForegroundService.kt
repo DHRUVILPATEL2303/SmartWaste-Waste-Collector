@@ -1,6 +1,5 @@
 package com.example.smartwaste_waste_collector.services
 
-
 import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -23,9 +22,11 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class LocationForegroundService : Service() {
 
-    @Inject lateinit var locationRepo: LocationRepositry
+    @Inject
+    lateinit var locationRepo: LocationRepositry
 
     private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private lateinit var locationCallback: LocationCallback
     private var routeId: String = ""
 
     override fun onBind(intent: Intent?): IBinder? = null
@@ -35,8 +36,11 @@ class LocationForegroundService : Service() {
         Log.d("LocationService", "Service started for Route ID: $routeId")
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+
         startForeground(1, createNotification())
+
         startLocationUpdates()
+
         return START_STICKY
     }
 
@@ -56,49 +60,47 @@ class LocationForegroundService : Service() {
             .setContentTitle("Smart Waste Collector")
             .setContentText("Tracking location for the current route...")
             .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setOngoing(true)
             .build()
     }
 
     @SuppressLint("MissingPermission")
     private fun startLocationUpdates() {
+        locationCallback = object : LocationCallback() {
+            override fun onLocationResult(result: LocationResult) {
+                val location = result.lastLocation ?: return
+                if (routeId.isNotBlank()) {
+                    CoroutineScope(Dispatchers.IO).launch {
+                        locationRepo.updateCollectorLocation(
+                            routeId,
+                            location.latitude,
+                            location.longitude
+                        )
+                    }
+                    Log.w("LocationService", "Location updated: ${location.latitude}, ${location.longitude}")
+                } else {
+                    Log.w("LocationService", "Route ID is blank, cannot update location.")
+                }
+            }
+        }
+
         val request = LocationRequest.Builder(
             Priority.PRIORITY_HIGH_ACCURACY,
             60_000L // 1 minute
-
         ).setMinUpdateIntervalMillis(30_000L).build()
 
         fusedLocationClient.requestLocationUpdates(
             request,
-            object : LocationCallback() {
-                override fun onLocationResult(result: LocationResult) {
-                    val location = result.lastLocation ?: return
-
-
-                    if (routeId.isNotBlank()) {
-                        CoroutineScope(Dispatchers.IO).launch {
-                            locationRepo.updateCollectorLocation(
-                                routeId,
-                                location.latitude,
-                                location.longitude
-                            )
-                        }
-                    } else {
-                        Log.w("LocationService", "Route ID is blank, cannot update location.")
-                    }
-                }
-            },
+            locationCallback,
             Looper.getMainLooper()
         )
     }
 
     override fun onDestroy() {
         Log.d("LocationService", "Service destroyed for Route ID: $routeId")
-        fusedLocationClient.removeLocationUpdates(locationCallback)
-        super.onDestroy()
-    }
-
-    private val locationCallback = object : LocationCallback() {
-        override fun onLocationResult(result: LocationResult) {
+        if (::fusedLocationClient.isInitialized && ::locationCallback.isInitialized) {
+            fusedLocationClient.removeLocationUpdates(locationCallback)
         }
+        super.onDestroy()
     }
 }

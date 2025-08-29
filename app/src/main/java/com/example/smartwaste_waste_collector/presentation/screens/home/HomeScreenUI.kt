@@ -166,7 +166,6 @@ fun HomeScreenUI(
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
-            // --- MODIFIED CALL TO PASS NAVCONTROLLER AND ROUTE ID ---
             HomeTopAppBar(
                 hasRouteProgress = routeProgressState.success != null && !showDialog,
                 routeId = routeProgressState.success?.routeId,
@@ -195,9 +194,12 @@ fun HomeScreenUI(
                     text = { Text(if (isTrackingStarted) "Tracking Active" else "Start Tracking") },
                     containerColor = if(isTrackingStarted) MaterialTheme.colorScheme.tertiaryContainer else MaterialTheme.colorScheme.primary,
                     contentColor = if(isTrackingStarted) MaterialTheme.colorScheme.onTertiaryContainer else MaterialTheme.colorScheme.onPrimary,
+                    modifier = Modifier.padding(bottom = 60.dp)
                 )
             }
+
         },
+
         containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
         Box(
@@ -339,7 +341,7 @@ private fun HomeTopAppBar(
                 }
             }
         },
-        // --- ADDED: Actions block for the map icon ---
+
         actions = {
             if (hasRouteProgress && routeId != null) {
                 IconButton(onClick = {
