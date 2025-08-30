@@ -57,9 +57,7 @@ class MainActivity : ComponentActivity() {
 
                 val routeProgressViewModel: RouteProgressViewModel = hiltViewModel()
 
-                LaunchedEffect(Unit) {
-                    routeProgressViewModel.getRouteProgress()
-                }
+
 
 
                 Log.d("MainActivity", "RouteProgressState in MainActivity: ${routeProgressViewModel.routeProgressState.collectAsState().value}")

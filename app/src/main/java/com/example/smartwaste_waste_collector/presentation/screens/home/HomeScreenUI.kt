@@ -83,6 +83,8 @@ fun HomeScreenUI(
 ) {
     val routeProgressState by routeProgressViewModel.routeProgressState.collectAsState()
 
+
+
     Log.d("homescreen-route-progress",routeProgressState.toString())
     val createState by routeProgressViewModel.createAndSubmitRouteProgressState.collectAsState()
     val updateState by routeProgressViewModel.updateAreaCompletedState.collectAsState()

@@ -12,6 +12,7 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.PointOfSale
 import androidx.compose.material.icons.filled.Report
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
@@ -57,9 +58,14 @@ fun AppNavigation(
     val navController = rememberNavController()
 
 
+
+
     val startDestination = if (!isOnboardingCompleted) {
         SubNavigation.OnBoardingRoutes
     } else if (isLogin!=null){
+        LaunchedEffect(Unit) {
+            routeProgressViewModel.getRouteProgress()
+        }
         SubNavigation.HomeRoutes
     } else {
         SubNavigation.AuthRoutes
