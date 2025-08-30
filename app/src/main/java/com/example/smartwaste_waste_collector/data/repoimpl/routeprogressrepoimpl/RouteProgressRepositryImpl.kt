@@ -27,7 +27,7 @@ class RouteProgressRepositoryImpl @Inject constructor(
     override fun getTodayRouteProgress(): Flow<ResultState<RouteProgressModel?>> = callbackFlow {
         trySend(ResultState.Loading)
 
-        val currentUserId = firebaseAuth.currentUser?.uid
+        val currentUserId = firebaseAuth.currentUser!!.uid
         if (currentUserId.isNullOrEmpty()) {
             trySend(ResultState.Success(null))
             close()
@@ -38,24 +38,28 @@ class RouteProgressRepositoryImpl @Inject constructor(
 
 
         val query = firebaseFirestore.collection(ROUTE_PROGRESS_MODEL)
-            .whereEqualTo("date", todayDate)
-            .where(
+                .where(
                 Filter.or(
                     Filter.equalTo("assignedDriverId", currentUserId),
                     Filter.equalTo("assignedCollectorId", currentUserId)
                 )
             )
-            .limit(1)
 
         val listener = query.addSnapshotListener { snapshot, error ->
             if (error != null) {
                 trySend(ResultState.Error(error.message ?: "An unknown error occurred."))
                 close()
+
+                Log.d("routeprogressmodel",error.toString())
+
                 return@addSnapshotListener
             }
 
+
+
             if (snapshot != null && !snapshot.isEmpty) {
                 val progress = snapshot.documents.first().toObject(RouteProgressModel::class.java)
+                Log.d("routeprogressmodel",progress.toString())
                 trySend(ResultState.Success(progress))
             } else {
 

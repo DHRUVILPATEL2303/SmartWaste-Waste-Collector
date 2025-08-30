@@ -1,10 +1,10 @@
 package com.example.smartwaste_waste_collector
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -25,6 +25,7 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.smartwaste_waste_collector.presentation.navigation.AppNavigation
 import com.example.smartwaste_waste_collector.presentation.viewmodels.onBoardingViewModel.OnBoardingViewModel
+import com.example.smartwaste_waste_collector.presentation.viewmodels.routeprogressviewmodel.RouteProgressViewModel
 import com.example.smartwaste_waste_collector.ui.theme.SmartWasteWasteCollectorTheme
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.AndroidEntryPoint
@@ -52,12 +53,25 @@ class MainActivity : ComponentActivity() {
                     showSplash = false
                 }
 
+
+
+                val routeProgressViewModel: RouteProgressViewModel = hiltViewModel()
+
+                LaunchedEffect(Unit) {
+                    routeProgressViewModel.getRouteProgress()
+                }
+
+
+                Log.d("MainActivity", "RouteProgressState in MainActivity: ${routeProgressViewModel.routeProgressState.collectAsState().value}")
+
                 if (showSplash || isOnboardingCompleted == null) {
                     SplashScreen()
                 } else {
+
                     AppNavigation(
                         isOnboardingCompleted = isOnboardingCompleted!!,
-                        isLogin = firebaseAuth.currentUser
+                        isLogin = firebaseAuth.currentUser,
+                        routeProgressViewModel = routeProgressViewModel
                     )
                 }
             }
@@ -82,13 +96,15 @@ fun GreetingPreview() {
 }
 
 @Composable
-fun SplashScreen() {
+fun SplashScreen(routeProgressViewModel: RouteProgressViewModel=hiltViewModel<RouteProgressViewModel>()) {
     var showContent by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         delay(500)
         showContent = true
     }
+
+
 
     Box(
         modifier = Modifier

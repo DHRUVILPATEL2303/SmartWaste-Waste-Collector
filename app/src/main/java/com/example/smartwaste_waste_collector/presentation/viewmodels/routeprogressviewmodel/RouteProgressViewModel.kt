@@ -53,7 +53,7 @@ class RouteProgressViewModel @Inject constructor(
 
 
     fun getRouteProgress() {
-        if(firebaseAuth.currentUser?.uid?.isEmpty() == true) return
+
 
         viewModelScope.launch {
             getRouteProgressUseCase.getRouteProgress().collect {

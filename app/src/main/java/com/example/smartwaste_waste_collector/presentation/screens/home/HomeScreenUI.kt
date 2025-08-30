@@ -5,6 +5,7 @@ import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material.icons.filled.GpsFixed
@@ -75,12 +76,14 @@ import kotlin.math.roundToInt
 @Composable
 fun HomeScreenUI(
     modifier: Modifier = Modifier,
-    routeProgressViewModel: RouteProgressViewModel = hiltViewModel(),
+    routeProgressViewModel: RouteProgressViewModel ,
     truckViewModel: TruckViewModel = hiltViewModel(),
     routeViewModel: RouteViewModel = hiltViewModel(),
     navController: NavHostController
 ) {
     val routeProgressState by routeProgressViewModel.routeProgressState.collectAsState()
+
+    Log.d("homescreen-route-progress",routeProgressState.toString())
     val createState by routeProgressViewModel.createAndSubmitRouteProgressState.collectAsState()
     val updateState by routeProgressViewModel.updateAreaCompletedState.collectAsState()
     val truckState by truckViewModel.allTruckState.collectAsState()
@@ -94,6 +97,12 @@ fun HomeScreenUI(
     val coroutineScope = rememberCoroutineScope()
 
 
+    LaunchedEffect(createState, updateState) {
+        if ((!createState.isLoading && createState.success != null) ||
+            (!updateState.isLoading && updateState.success != null)) {
+
+        }
+    }
 
     val context = LocalContext.current
     var isTrackingStarted by remember { mutableStateOf(false) }
@@ -156,12 +165,7 @@ fun HomeScreenUI(
 
     }
 
-    LaunchedEffect(createState, updateState) {
-        if ((!createState.isLoading && createState.success != null) ||
-            (!updateState.isLoading && updateState.success != null)) {
-            routeProgressViewModel.getRouteProgress()
-        }
-    }
+
 
     Scaffold(
         modifier = modifier.fillMaxSize(),

@@ -12,7 +12,6 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.PointOfSale
 import androidx.compose.material.icons.filled.Report
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
@@ -43,8 +42,7 @@ import com.example.smartwaste_waste_collector.presentation.screens.report.Report
 import com.example.smartwaste_waste_collector.presentation.screens.routemapsscreen.RouteMapScreenUI
 import com.example.smartwaste_waste_collector.presentation.viewmodels.authviewmodel.AuthViewModel
 import com.example.smartwaste_waste_collector.presentation.viewmodels.onBoardingViewModel.OnBoardingViewModel
-import com.google.firebase.Firebase
-import com.google.firebase.auth.FirebaseAuth
+import com.example.smartwaste_waste_collector.presentation.viewmodels.routeprogressviewmodel.RouteProgressViewModel
 import com.google.firebase.auth.FirebaseUser
 
 
@@ -52,8 +50,9 @@ import com.google.firebase.auth.FirebaseUser
 fun AppNavigation(
     viewModel: AuthViewModel = hiltViewModel(),
     onBoardingViewModel: OnBoardingViewModel = hiltViewModel(),
-    isLogin : FirebaseUser?,
-    isOnboardingCompleted : Boolean
+    isLogin: FirebaseUser?,
+    isOnboardingCompleted: Boolean,
+    routeProgressViewModel: RouteProgressViewModel
 ) {
     val navController = rememberNavController()
 
@@ -149,7 +148,7 @@ fun AppNavigation(
                 composable<Routes.SignUpScreen> { SignUpScreenUI(navController=navController) }
             }
             navigation<SubNavigation.HomeRoutes>(startDestination = Routes.HomeScreen) {
-                composable<Routes.HomeScreen> { HomeScreenUI(navController=navController) }
+                composable<Routes.HomeScreen> { HomeScreenUI(navController=navController, routeProgressViewModel = routeProgressViewModel) }
                 composable<Routes.ReportScreen> { ReportScreenUI() }
                 composable<Routes.PointsScreen> { GivePointsScreenUI(navController=navController) }
                 composable<Routes.FeedBackScreen> { FeedBackScreenUI(navController=navController) }
